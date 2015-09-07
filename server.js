@@ -4,18 +4,6 @@ var fs = require('fs');
 var mime = require('mime');
 var listenPort = 80;//监听的端口
 
-//创建写入文件
-fs.exists("./write.txt", function (exists) {
-    if (!exists) {
-        fs.writeFile("./write.txt", "这是fs.writeFile创建并写入进来的", {encoding: 'utf-8', flag: 'a+'}, function (err) {
-            console.log("write.txt创建成功")
-        });
-    } else {
-        fs.writeFile("./write.txt", "----这是追加进来的", {encoding: 'utf-8', flag: 'a+'}, function (err) {
-            console.log("write.txt追加内容成功")
-        });
-    }
-});
 
 //创建目录
 makeP('mkf1/mkf2/mkf3');
@@ -32,6 +20,21 @@ function makeP(path) {
         }
     }
 }
+//创建写入文件
+fs.exists("./mkf1/mkf2/mkf3/write.txt", function (exists) {
+    if (!exists) {
+        fs.writeFile("./mkf1/mkf2/mkf3/write.txt", "这是fs.writeFile创建并写入进来的", {
+            encoding: 'utf-8',
+            flag: 'a+'
+        }, function (err) {
+            console.log("write.txt创建成功")
+        });
+    } else {
+        fs.writeFile("./mkf1/mkf2/mkf3/write.txt", "----这是追加进来的", {encoding: 'utf-8', flag: 'a+'}, function (err) {
+            console.log("write.txt追加内容成功")
+        });
+    }
+});
 
 //rmdirP('mkf1');
 function rmdirP(path) {//递归太晕
@@ -50,10 +53,11 @@ function rmdirP(path) {//递归太晕
                     }
                 });
                 fs.rmdirSync(path);
+            } else {
+                fs.unlinkSync(path);
             }
         }
     }
-    return false;
 }
 
 http.createServer(function (req, res) {
@@ -79,13 +83,17 @@ http.createServer(function (req, res) {
     //        res.end(data);
     //    });
     //}
+
+
     else if (pathname == "/del") {
-        for(var key in queryObj){
+        for (var key in queryObj) {
             console.log(queryObj[key]);
             rmdirP(queryObj[key]);
         }
-        res.end();
-    } else if (pathname == "/params") {
+        res.writeHeader(200);
+        res.end(JSON.stringify('true'));
+    }
+    else if (pathname == "/params") {
         //需要换成字符串才能返回给浏览器，要不是个对象，会报错的
         res.end(JSON.stringify(queryObj));
     } else {
@@ -103,35 +111,37 @@ http.createServer(function (req, res) {
                         if (err) {
                             res.writeHeader(502, 'Content-Type', "text/html;charset=utf-8");
                             res.end("错误：" + err)
-                        } else{
+                        } else {
                             res.writeHead(200, {"Content-Type": "text/html;charset=utf-8"});
                             files.forEach(function (file) {
-                                if(file=="node_modules"||file=="css"||file=="js"||file==".git"||file==".idea"||file=="images"){
+                                if (file =='server.js'||file == "node_modules" || file == "css" || file == "js" || file == ".git" || file == ".idea" || file == "images") {
 
-                                }else{
+                                } else {
                                     var filePatch = reqFilename + '/' + file;
                                     if (pathname == "/") {
                                         if (fs.statSync(filePatch).isFile()) {
-                                            str += '<p>';
+                                            str += '<p class="file">';
                                             str += '<a href=/' + file + '>点击查看文件----' + file + '</a><a href=/del?path=' + file + ' class="remove">删除</a>';
                                         } else {
-                                            str += '<p class="file">';
+                                            str += '<p class="files">';
                                             str += '<a href=/' + file + '>点击查看文件夹----' + file + '</a><a href=/del?path=' + file + ' class="remove">删除</a>';
                                         }
                                         str += '</p>';
                                     } else {
                                         if (fs.statSync(filePatch).isFile()) {
-                                            str += '<p>';
-                                            str += '<a href=' + pathname + '/' + file + '>点击查看文件----' + file + '</a><a href=/del?path='+ reqFilename + '/' + file + ' class="remove">删除</a>';
-                                        } else {
                                             str += '<p class="file">';
-                                            str += '<a href=' + pathname + '/' + file + '>点击查看文件夹----' + file + '</a><a href=/del?path='+ reqFilename + '/' + file + ' class="remove">删除</a>';
+                                            str += '<a href=' + pathname + '/' + file + '>点击查看文件----' + file + '</a><a href=/del?path=' + reqFilename + '/' + file + ' class="remove">删除</a>';
+                                        } else {
+                                            str += '<p class="files">';
+                                            str += '<a href=' + pathname + '/' + file + '>点击查看文件夹----' + file + '</a><a href=/del?path=' + reqFilename + '/' + file + ' class="remove">删除</a>';
 
                                         }
                                         str += '</p>';
+
                                     }
                                 }
                             });
+                            str += '<script src="/js/js.js"></script>'
                             res.end(str)
                         }
                     });

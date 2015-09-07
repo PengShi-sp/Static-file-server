@@ -22,6 +22,14 @@ p.file {
     background-color: chartreuse;
     margin: 20px 5% 0 5%;
 }
+p.files {
+
+    background-color: #333333;
+    margin: 20px 5% 0 5%;
+}
+p.files a{
+    color: #fff;
+}
 
 p a {
     width: 90%;
@@ -29,6 +37,8 @@ p a {
 
 }
 p a.remove{
+    border-radius:0 5px 5px 0;
     width: 10%;
     background-color: red;
+    color: #fff;
 }
