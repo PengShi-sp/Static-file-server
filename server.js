@@ -102,7 +102,7 @@ http.createServer(function (req, res) {
         //fs.exists检查文件是否存在，会给回调函数传一个参数，true和false
         fs.exists(reqFilename, function (exists) {
             if (exists) {
-                var str = '<link rel="stylesheet" href=/css/index.css/>';//不同路径下如何处理
+                var str = '<link rel="stylesheet" href=/css/index.css>';//不同路径下如何处理
                 //var str='';
 
                 if (fs.statSync(reqFilename).isDirectory()) {
