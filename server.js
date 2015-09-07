@@ -33,7 +33,7 @@ function makeP(path) {
     }
 }
 
-setTimeout(rmdirP('mkf1/mkf2'), 15000);
+//rmdirP('mkf1');
 function rmdirP(path) {//递归太晕
     var paths = path.split('/');
     for (var i = paths.length; i >= 1; i--) {
@@ -53,6 +53,7 @@ function rmdirP(path) {//递归太晕
             }
         }
     }
+    return false;
 }
 
 http.createServer(function (req, res) {
@@ -61,14 +62,15 @@ http.createServer(function (req, res) {
     var pathname = urls[0];
     var query = urls[1];
     var queryObj = {};
-    res.setHeader("Server","Node/V8");
+    res.setHeader("Server", "Node/V8");
     if (query) {//如果请求的URL不带参数，会变成undefined，导致报错，这里要判断一下
         var fields = query.split("&");
         fields.forEach(function (fields) {
             var vals = fields.split("=");
             queryObj[vals[0]] = vals[1];
         })
-    } else if (pathname == "/favicon.ico") {
+    }
+    if (pathname == "/favicon.ico") {
         res.end();
     }
     //else if (pathname == "/") {
@@ -77,8 +79,12 @@ http.createServer(function (req, res) {
     //        res.end(data);
     //    });
     //}
-    else if (pathname == "/ajax") {
-        res.end("服务器返回的值")
+    else if (pathname == "/del") {
+        for(var key in queryObj){
+            console.log(queryObj[key]);
+            rmdirP(queryObj[key]);
+        }
+        res.end();
     } else if (pathname == "/params") {
         //需要换成字符串才能返回给浏览器，要不是个对象，会报错的
         res.end(JSON.stringify(queryObj));
@@ -90,38 +96,40 @@ http.createServer(function (req, res) {
             if (exists) {
                 var str = '<link rel="stylesheet" href=/css/index.css/>';//不同路径下如何处理
                 //var str='';
+
                 if (fs.statSync(reqFilename).isDirectory()) {
                     //fs.readdir回调函数传递两个参数 err 和 files，files是一个包含 “ 指定目录下所有文件名称的” 数组。
                     fs.readdir(reqFilename, function (err, files) {
                         if (err) {
                             res.writeHeader(502, 'Content-Type', "text/html;charset=utf-8");
                             res.end("错误：" + err)
-                        } else {
-
+                        } else{
                             res.writeHead(200, {"Content-Type": "text/html;charset=utf-8"});
                             files.forEach(function (file) {
-                                var filePatch = reqFilename + '/' + file;
+                                if(file=="node_modules"||file=="css"||file=="js"||file==".git"||file==".idea"||file=="images"){
 
-                                if (pathname == "/") {
-                                    if (fs.statSync(filePatch).isFile()) {
-                                        str += '<p>';
-                                        str += '<a href=/' + file + '>点击查看文件----' + file + '</a>';
+                                }else{
+                                    var filePatch = reqFilename + '/' + file;
+                                    if (pathname == "/") {
+                                        if (fs.statSync(filePatch).isFile()) {
+                                            str += '<p>';
+                                            str += '<a href=/' + file + '>点击查看文件----' + file + '</a><a href=/del?path=' + file + ' class="remove">删除</a>';
+                                        } else {
+                                            str += '<p class="file">';
+                                            str += '<a href=/' + file + '>点击查看文件夹----' + file + '</a><a href=/del?path=' + file + ' class="remove">删除</a>';
+                                        }
+                                        str += '</p>';
                                     } else {
-                                        str += '<p class="file">';
-                                        str += '<a href=/' + file + '>点击查看文件夹----' + file + '</a>';
+                                        if (fs.statSync(filePatch).isFile()) {
+                                            str += '<p>';
+                                            str += '<a href=' + pathname + '/' + file + '>点击查看文件----' + file + '</a><a href=/del?path='+ reqFilename + '/' + file + ' class="remove">删除</a>';
+                                        } else {
+                                            str += '<p class="file">';
+                                            str += '<a href=' + pathname + '/' + file + '>点击查看文件夹----' + file + '</a><a href=/del?path='+ reqFilename + '/' + file + ' class="remove">删除</a>';
 
+                                        }
+                                        str += '</p>';
                                     }
-                                    str += '</p>';
-                                } else {
-                                    if (fs.statSync(filePatch).isFile()) {
-                                        str += '<p>';
-                                        str += '<a href=' + pathname + '/' + file + '>点击查看文件----' + file + '</a>';
-                                    } else {
-                                        str += '<p class="file">';
-                                        str += '<a href=' + pathname + '/' + file + '>点击查看文件夹----' + file + '</a>';
-
-                                    }
-                                    str += '</p>';
                                 }
                             });
                             res.end(str)

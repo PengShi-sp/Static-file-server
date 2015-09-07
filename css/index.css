@@ -23,7 +23,12 @@ p.file {
     margin: 20px 5% 0 5%;
 }
 
-p.file a {
-    display: block;
+p a {
+    width: 90%;
+    display: inline-block;
 
+}
+p a.remove{
+    width: 10%;
+    background-color: red;
 }
